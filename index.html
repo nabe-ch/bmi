@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Fitness & Diet Tracker</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1><i class="fa-solid fa-fire-flame-curved"></i> Smart Fitness Tracker</h1>
+    <p>科学的根拠に基づいた、あなたのためのダイエット管理ダッシュボード</p>
+  </header>
+
+  <main class="container">
+    <!-- ① ステータス測定 -->
+    <section class="card">
+      <h2><i class="fa-solid fa-scale-balanced"></i> 現在のステータスと肥満度診断</h2>
+      <div class="input-group-row">
+        <div class="input-group">
+          <label for="height">身長 (cm)</label>
+          <!-- 制限: max 999.9, min 0 -->
+          <input type="number" id="height" placeholder="例: 170.0" step="0.1" min="0" max="999.9" class="strict-decimal">
+        </div>
+        <div class="input-group">
+          <label for="currentWeight">体重 (kg)</label>
+          <input type="number" id="currentWeight" placeholder="例: 65.0" step="0.1" min="0" max="999.9" class="strict-decimal">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="calculateStatus()">診断する</button>
+      
+      <div id="statusResult" class="result-box hidden">
+        <h3>診断結果</h3>
+        <p>BMI: <span id="bmiValue" class="highlight">-</span></p>
+        <p>日本肥満学会基準: <span id="obesityLevel" class="highlight">-</span></p>
+      </div>
+    </section>
+
+    <!-- ② 目標逆算 -->
+    <section class="card">
+      <h2><i class="fa-solid fa-bullseye"></i> 目標逆算シミュレーター</h2>
+      <div class="input-group-row">
+        <div class="input-group">
+          <label for="targetWeight">目標体重 (kg)</label>
+          <input type="number" id="targetWeight" placeholder="例: 60.0" step="0.1" min="0" max="999.9" class="strict-decimal">
+        </div>
+        <div class="input-group">
+          <label for="dietDays">期間 (日数)</label>
+          <input type="number" id="dietDays" placeholder="例: 90" step="1" min="1" max="999" class="strict-int">
+        </div>
+      </div>
+      <button class="btn btn-secondary" onclick="calculateTarget()">ミッションを作成</button>
+      
+      <div id="targetResult" class="result-box hidden">
+        <h3>🔥 脂肪燃焼ミッション</h3>
+        <p>目標達成のために削るべきカロリー（赤字）</p>
+        <div class="mission-grid">
+          <div class="mission-item">
+            <span class="label">1日あたり</span>
+            <span class="value" id="dailyDeficit">- kcal</span>
+          </div>
+          <div class="mission-item">
+            <span class="label">1週間あたり</span>
+            <span class="value" id="weeklyDeficit">- kcal</span>
+          </div>
+        </div>
+        <p class="unique-message" id="uniqueMessage"></p>
+        <!-- 既存のメッセージ表示 -->
+      <p id="uniqueMessage" class="text-xl font-bold text-red-500 mt-4"></p>
+      
+      <!-- ▼▼▼ ここから追加 ▼▼▼ -->
+      <div class="diet-tip mt-4">
+        <strong>マインドセット</strong><br>
+        「何を食べないか！」ではなく、「何を食べても良さそうか！」を探してみよう。<br>
+        ポジティブな選択がストレスを減らし、リバウンド防止に繋がります！
+      </div>
+      <!-- ▲▲▲ ここまで追加 ▲▲▲ -->
+      </div>
+    </section>
+
+    <!-- ③ 4大運動 -->
+    <section class="card">
+      <h2><i class="fa-solid fa-person-running"></i> あなたにおすすめの運動（1時間あたり）</h2>
+      <p class="note">※現在の体重から算出した目安です</p>
+      <div class="exercise-grid">
+        <div class="ex-card"><i class="fa-solid fa-shoe-prints"></i><h4>ジョギング</h4><p id="calJog">- kcal</p></div>
+        <div class="ex-card"><i class="fa-solid fa-person-walking"></i><h4>早歩き</h4><p id="calWalk">- kcal</p></div>
+        <div class="ex-card"><i class="fa-solid fa-stopwatch"></i><h4>HIIT</h4><p id="calHiit">- kcal</p></div>
+        <div class="ex-card"><i class="fa-solid fa-dumbbell"></i><h4>自重筋トレ</h4><p id="calMuscle">- kcal</p></div>
+      </div>
+    </section>
+
+    <!-- ④ デバイス保存＆履歴グラフ -->
+    <section class="card">
+      <h2><i class="fa-solid fa-chart-line"></i> 日々の記録とグラフ</h2>
+      <div class="log-form">
+        <div class="input-group">
+          <label for="logDate">日付</label>
+          <input type="date" id="logDate">
+        </div>
+        <div class="input-group">
+          <label for="logWeight">本日の体重 (kg)</label>
+          <input type="number" id="logWeight" step="0.1" min="0" max="999.9" class="strict-decimal">
+        </div>
+        <button class="btn btn-primary" onclick="saveDailyLog()">記録を保存</button>
+      </div>
+
+      <!-- グラフフィルター -->
+      <div class="chart-filters">
+        <button class="filter-btn" onclick="setChartFilter('1week')">1週間</button>
+        <button class="filter-btn active" onclick="setChartFilter('1month')">1ヶ月</button>
+        <button class="filter-btn" onclick="setChartFilter('3months')">3ヶ月</button>
+        <button class="filter-btn" onclick="setChartFilter('6months')">半年</button>
+        <button class="filter-btn" onclick="setChartFilter('1year')">1年</button>
+      </div>
+      
+<div class="chart-container">
+        <canvas id="weightChart"></canvas>
+      </div> <div class="privacy-note">
+        <i class="fa-solid fa-shield-halved"></i> 
+        入力されたデータはお使いのデバイス（PC・スマートフォン）にのみ保存されるため、外部や他機関に送信・漏洩することは一切ありません。安心してご利用いただけます。
+      </div>
+
+      <div class="data-actions">
+        <button class="btn btn-warning" onclick="deleteLatestLog()"><i class="fa-solid fa-rotate-left"></i> 直近の入力を削除</button>
+        <button class="btn btn-danger" onclick="clearData()"><i class="fa-solid fa-trash-can"></i> すべてリセット</button>
+      </div>
+
+    </section>
+  </main>
+
+  <footer>
+    <h3>📚 科学的根拠・参考文献 (References)</h3>
+    <ul class="references">
+      <li>日本肥満学会 (JAS) 「肥満症診療ガイドライン」</li>
+      <li>WHO "Obesity and overweight" Guidelines</li>
+      <li>厚生労働省「健康日本21（身体活動・運動）」</li>
+      <li>Keytel, L. R., et al. (2005) - Journal of Sports Sciences</li>
+      <li>Tremblay, A., et al. (1994) - Metabolism (HIIT EPOC)</li>
+      <li>ACSM Position Stand (運動処方に関するガイドライン)</li>
+      <li>Holloszy, J. O. (1967) - Journal of Biological Chemistry</li>
+      <li>Vollaard, N. B., & Metcalfe, R. S. (2017) - Sports Medicine</li>
+      <li>Donnelly, J. E., et al. (2009) - Medicine & Science in Sports & Exercise</li>
+      <li>Maughan, R. J., & Burke, L. M. (2002) - Sports Nutrition</li>
+    </ul>
+    <p>&copy; 2026 Smart Fitness Tracker</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
