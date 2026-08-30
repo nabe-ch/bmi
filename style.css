@@ -108,7 +108,7 @@ input[type="number"], input[type="date"] {
   color: var(--text-main);
   background-color: #FFFAFC;
   transition: border 0.3s;
-  width: 100%; /* モバイルでも画面幅に合わせる */
+  width: 80%; /* モバイルでも画面幅に合わせる */
 }
 
 input:focus {
